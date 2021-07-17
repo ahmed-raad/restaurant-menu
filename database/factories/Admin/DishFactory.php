@@ -3,6 +3,7 @@
 namespace Database\Factories\Admin;
 
 use App\Models\Admin\Dish;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class DishFactory extends Factory
@@ -22,7 +23,7 @@ class DishFactory extends Factory
     public function definition()
     {
         return [
-            'name'          => $this->faker->word(),
+            'name'          => Str::random(15),
             'category'      => $this->faker->word(),
             'sub_category'  => $this->faker->word(),
             'image'         => 'default.jpg',
