@@ -26,7 +26,7 @@ class DishFactory extends Factory
             'name'          => Str::random(15),
             'category'      => $this->faker->word(),
             'sub_category'  => $this->faker->word(),
-            'image_url'     => 'https://drive.google.com/uc?id=1PRGj4a6632FX_9fb6QJf8X0SoEHvNNxM',
+            'image_url'     => 'https://drive.google.com/uc?id=1rJT75pjxBJFTrcFTkoOfC-EO7JLa9R0Q',
             'image_id'      => '1rJT75pjxBJFTrcFTkoOfC-EO7JLa9R0Q',
             'image_name'    => 'default.jpg',
             'description'   => $this->faker->text(300),
