@@ -18,7 +18,9 @@ class CreateDishesTable extends Migration
             $table->string("name", 40)->unique();
             $table->string("category", 20);
             $table->string("sub_category", 20);
-            $table->string('image', 30);
+            $table->string('image_url', 150);
+            $table->string("image_id", 50);
+            $table->string("image_name", 30);
             $table->text("description");
             $table->integer("price");
             $table->boolean("is_available");
