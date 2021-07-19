@@ -18,7 +18,7 @@ class DishResource extends JsonResource
             'name'          => $this->name,
             'category'      => $this->category,
             'sub_category'  => $this->sub_category,
-            'image_url'     => $this->image_url,
+            'image_url'     => $this->image_path,
             'description'   => $this->description,
             'price'         => $this->price,
             'is_available'  => $this->is_available,

@@ -22,4 +22,9 @@ class Dish extends Model
         'price',
         'is_available',
     ];
+
+    public function getImagePathAttribute()
+    {
+        return asset('uploads/images/'.$this->image_name);
+    }
 }
