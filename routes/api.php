@@ -24,3 +24,5 @@ Route::get("/dishes/{dish_id}", [DishController::class, "show_dish"]);
 Route::post("/dishes", [DishController::class, "store"]);
 Route::put("/dishes/{dish_id}", [DishController::class, "update"]);
 Route::delete("/dishes/{dish_id}", [DishController::class, "destroy"]);
+
+Route::post('/test', [DishController::class, 'test']);

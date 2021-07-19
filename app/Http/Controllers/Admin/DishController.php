@@ -7,6 +7,7 @@ use App\Models\Admin\Dish;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use League\Flysystem\Filesystem;
+use App\Http\Requests\DishRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DishResource;
 use Illuminate\Database\QueryException;
@@ -150,6 +151,31 @@ class DishController extends Controller
         Storage::disk('google')->delete($deleted_dish->image_id);
         $deleted_dish->delete();
         return "The selected dish has been deleted!";
+    }
+
+    public function test(DishRequest $request) {
+
+
+
+        if($image = $request->image){
+            $imageName  = Str::after($image->store('images','public'), '/');
+        }
+
+        $form_data = [
+            'name'          =>  $request->name,
+            'category'      =>  $request->category,
+            'sub_category'  =>  $request->sub_category,
+            'image_url'     =>  'test',
+            'image_id'      =>  'nbfjf',
+            'image_name'    =>  $imageName,
+            'description'   =>  $request->description,
+            'price'         =>  $request->price,
+            'is_available'  =>  $request->is_available,
+        ];
+
+        Dish::create($form_data);
+
+        return response(['success' => 'Dish has created ssuccesfly']);
     }
 
 }
