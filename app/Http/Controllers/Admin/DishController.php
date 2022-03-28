@@ -5,14 +5,12 @@ namespace App\Http\Controllers\Admin;
 use PDOException;
 use App\Models\Admin\Dish;
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use League\Flysystem\Filesystem;
 use App\Http\Requests\DishRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DishResource;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 use App\Providers\GoogleDriveServiceProvider;
 
 class DishController extends Controller
@@ -31,117 +29,89 @@ class DishController extends Controller
     }
 
 
-    public function store(Request $request)
+    public function store(DishRequest $request)
     {
-        $validation = Validator::make($request->all(), [
-                'name'          =>  'required|max:40|min:5',
-                'category'      =>  'required|max:20|min:5',
-                'sub_category'  =>  'required|max:40|min:5',
-                'image'         =>  'required|mimes:jpeg,jpg,bmp,png',
-                'description'   =>  'required',
-                'price'         =>  'required',
-                'is_available'  =>  'required',
-            ]);
+        $image_file = $request->file('image');
+        $image_name = Str::random(25) . '.' . $image_file->getClientOriginalExtension();
+        $image = Storage::disk("google")->putFileAs("", $image_file, $image_name);
 
-        if ($validation->fails()) {
-            return response()->json(['error' => $validation->errors()]);
-        } else {
-            $image_file = $request->file('image');
-            $image_name = Str::random(25) . '.' . $image_file->getClientOriginalExtension();
-            $image = Storage::disk("google")->putFileAs("", $image_file, $image_name);
+        $image_id = Storage::disk("google")->getMetadata($image)["path"];
+        $image_url = Storage::disk('google')->url($image);
 
-            $image_id = Storage::disk("google")->getMetadata($image)["path"];
-            $image_url = Storage::disk('google')->url($image);
+        $form_data = array(
+            'name'          =>  $request->name,
+            'category'      =>  $request->category,
+            'sub_category'  =>  $request->sub_category,
+            'image_url'     =>  $image_url,
+            'image_id'      =>  $image_id,
+            'image_name'    =>  $image_name,
+            'description'   =>  $request->description,
+            'price'         =>  $request->price,
+            'is_available'  =>  $request->is_available,
+        );
 
-            $form_data = array(
-                'name'          =>  $request->name,
-                'category'      =>  $request->category,
-                'sub_category'  =>  $request->sub_category,
-                'image_url'     =>  $image_url,
-                'image_id'      =>  $image_id,
-                'image_name'    =>  $image_name,
-                'description'   =>  $request->description,
-                'price'         =>  $request->price,
-                'is_available'  =>  $request->is_available,
-            );
-
-            try {
-                Dish::create($form_data);
-            }
-            catch (QueryException $e) {
-                Storage::disk('google')->delete($image_id);
-                return $e;
-            }
-            catch (PDOException $e) {
-                Storage::disk('google')->delete($image_id);
-                return $e;
-            }
+        try {
+            Dish::create($form_data);
         }
+        catch (QueryException $e) {
+            Storage::disk('google')->delete($image_id);
+            return $e;
+        }
+        catch (PDOException $e) {
+            Storage::disk('google')->delete($image_id);
+            return $e;
+        }
+        return response(['success' => 'Dish has been created successfully']);
+
     }
 
 
-    public function update(Request $request, $id)
+    public function update(DishRequest $request, $id)
     {
-        $validation = Validator::make($request->all(), [
-            'name'          =>  'required|max:40|min:5',
-            'category'      =>  'required|max:20|min:5',
-            'sub_category'  =>  'required|max:40|min:5',
-            'image'         =>  'required|mimes:jpeg,jpg,bmp,png',
-            'description'   =>  'required',
-            'price'         =>  'required',
-            'is_available'  =>  'required',
-        ]);
+        $updated_dish        = Dish::find($id);
+        $current_image_name  = $updated_dish->image_name;
+        $current_image_url   = $updated_dish->image_url;
+        $current_image_id    = $updated_dish->image_id;
+        $new_image           = $request->file('image');
+        $new_image_name      = $new_image->getClientOriginalName();
 
-        if ($validation->fails()) {
-            return response()->json(['error' => $validation->errors()]);
-        }
-        else {
-            $updated_dish        = Dish::find($id);
-            $current_image_name  = $updated_dish->image_name;
-            $current_image_url   = $updated_dish->image_url;
-            $current_image_id    = $updated_dish->image_id;
-            $new_image           = $request->file('image');
-            $new_image_name      = $new_image->getClientOriginalName();
+        if ($current_image_name != $new_image_name){
+            Storage::disk('google')->delete($updated_dish->image_id);
+            $image_name = Str::random(25) . '.' . $new_image->getClientOriginalExtension();
+            $image = Storage::disk("google")->putFileAs("", $new_image, $image_name);
 
-            if ($current_image_name != $new_image_name){
-                Storage::disk('google')->delete($updated_dish->image_id);
-                $image_name = Str::random(25) . '.' . $new_image->getClientOriginalExtension();
-                $image = Storage::disk("google")->putFileAs("", $new_image, $image_name);
-
-                $current_image_name      = Str::random(25) . '.' . $new_image->getClientOriginalExtension();
-                $current_image_url       = Storage::disk('google')->url($image);
-                $current_image_id        = Storage::disk("google")->getMetadata($image)["path"];
-            }
-
-            $form_data = array(
-                'name'          =>  $request->name,
-                'category'      =>  $request->category,
-                'sub_category'  =>  $request->sub_category,
-                'image_url'     =>  $current_image_url,
-                'image_id'      =>  $current_image_id,
-                'image_name'    =>  $current_image_name,
-                'description'   =>  $request->description,
-                'price'         =>  $request->price,
-                'is_available'  =>  $request->is_available,
-            );
-
-
-
-            try {
-                $updated_dish->update($form_data);
-            }
-            catch (QueryException $e) {
-                Storage::disk('google')->delete($current_image_id);
-                return $e;
-            }
-            catch (PDOException $e) {
-                Storage::disk('google')->delete($current_image_id);
-                return $e;
-            }
-
-            return 'The details of the selected dish has been updated successfully!';
+            $current_image_name      = Str::random(25) . '.' . $new_image->getClientOriginalExtension();
+            $current_image_url       = Storage::disk('google')->url($image);
+            $current_image_id        = Storage::disk("google")->getMetadata($image)["path"];
         }
 
+        $form_data = array(
+            'name'          =>  $request->name,
+            'category'      =>  $request->category,
+            'sub_category'  =>  $request->sub_category,
+            'image_url'     =>  $current_image_url,
+            'image_id'      =>  $current_image_id,
+            'image_name'    =>  $current_image_name,
+            'description'   =>  $request->description,
+            'price'         =>  $request->price,
+            'is_available'  =>  $request->is_available,
+        );
+
+
+
+        try {
+            $updated_dish->update($form_data);
+        }
+        catch (QueryException $e) {
+            Storage::disk('google')->delete($current_image_id);
+            return $e;
+        }
+        catch (PDOException $e) {
+            Storage::disk('google')->delete($current_image_id);
+            return $e;
+        }
+
+        return 'The details of the selected dish has been updated successfully!';
     }
 
 

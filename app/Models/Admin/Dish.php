@@ -25,6 +25,6 @@ class Dish extends Model
 
     public function getImagePathAttribute()
     {
-        return asset('uploads/images/'.$this->image_name);
+        return asset('https://drive.google.com/uc?id='.$this->image_id);
     }
 }
